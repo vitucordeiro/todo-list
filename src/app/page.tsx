@@ -1,32 +1,42 @@
-"use client"; // Necessário para permitir uso de hooks no Next.js (se aplicável)
-
-import { ChangeEvent, useState, MouseEvent } from 'react';
+"use client"
+import React, { ChangeEvent, useState, MouseEvent } from 'react';
 
 export default function Home() {
-  const [tasks, setTasks] = useState<string[]>([]); // Inicializa o estado das tarefas como array vazio de strings
-  const [newTask, setNewTask] = useState<string>(''); // Estado para controlar o valor do input
-  const [editTask,setEditTask] = useState<number | null>(null);
-  const [editedTask, setEditedTask] = useState<string>("")
+  const [tasks, setTasks] = useState<string[]>([]);
+  const [newTask, setNewTask] = useState<string>('');
+  const [editIndex, setEditIndex] = useState<number | null>(null); // Estado para controlar o índice da task em edição
+  const [editedTask, setEditedTask] = useState<string>(''); // Estado para armazenar o texto editado da task
 
-  // Manipula a mudança de texto no input
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     setNewTask(e.target.value);
   };
 
-  // Adiciona nova tarefa na lista
   const handleNewTask = (e: MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault(); // Previne o comportamento padrão do botão de recarregar a página
-    if (newTask.trim() !== '') { // Verifica se a nova tarefa não está vazia
-      setTasks([...tasks,newTask]); // Adiciona a nova tarefa ao array de tarefas
-      setNewTask(''); // Limpa o campo de input após adicionar
+    e.preventDefault();
+    if (newTask.trim() !== '') {
+      setTasks([...tasks, newTask]);
+      setNewTask('');
     }
   };
-  const handleDeleteTask = (indexToDelete:number) =>{
 
-    setTasks(tasks.filter((_, index) => index != indexToDelete));
+  const handleDeleteTask = (indexToDelete: number) => {
+    setTasks(tasks.filter((_, index) => index !== indexToDelete));
+  };
 
+  const handleEditTask = (index: number) => {
+    setEditIndex(index);
+    setEditedTask(tasks[index]); // Preenche o formulário de edição com o texto atual da task
+  };
 
-  }
+  const handleSaveEditedTask = () => {
+    if (editedTask.trim() !== '') {
+      const updatedTasks = [...tasks];
+      updatedTasks[editIndex as number] = editedTask;
+      setTasks(updatedTasks);
+      setEditIndex(null);
+      setEditedTask('');
+    }
+  };
 
   return (
     <main className="flex h-screen w-screen items-center justify-center bg-blue-600">
@@ -40,48 +50,58 @@ export default function Home() {
             type="text"
             aria-label="New task"
             value={newTask}
-            onChange={handleSearchChange} // Atualiza o estado `newTask` ao digitar
+            onChange={handleSearchChange}
           />
           <button
             className="p-2 bg-red-500 text-white rounded-r-lg"
-            onClick={handleNewTask} // Adiciona a nova tarefa ao clicar
+            onClick={handleNewTask}
           >
-            new
+            Add
           </button>
         </form>
 
         <hr className="mb-4" />
 
-        {/* Área de tarefas com barra de rolagem quando necessário */}
-        <div className="max-h-96 overflow-y-auto space-y-2 ">
+        <div className="max-h-96 overflow-y-auto space-y-2">
           {tasks.map((task, index) => (
-            
-              <div key={index} className="pl-8 flex flex-row justify-between items-center p-2 bg-gray-200 rounded-lg">
+            <div key={index} className="pl-8 flex flex-row justify-between items-center p-2 bg-gray-200 rounded-lg">
+              {editIndex === index ? (
+                <input
+                  type="text"
+                  value={editedTask}
+                  onChange={(e) => setEditedTask(e.target.value)}
+                  className="flex-1 p-2 rounded-lg border border-gray-300 focus:outline-none"
+                />
+              ) : (
                 <p>{task}</p>
+              )}
+              <div>
+                {editIndex === index ? (
+                  <button
+                    className="p-2 bg-green-500 text-white rounded-lg mr-2"
+                    onClick={handleSaveEditedTask}
+                  >
+                    Save
+                  </button>
+                ) : (
+                  <button
+                    className="p-2 bg-red-500 text-white rounded-lg mr-2"
+                    onClick={() => handleEditTask(index)}
+                  >
+                    Edit
+                  </button>
+                )}
                 <button
-                className="p-2 bg-red-500 text-white rounded-lg"
-                onClick={()=>{handleDeleteTask(index)}}
-              >
-                delete
-              </button>
-              <button
-                className="p-2 bg-red-500 text-white rounded-lg"
-                onClick={()=>{
-                  <div>
-                    <p>teste</p>
-                  </div>
-                }}
-              >
-                edit
-              </button>
+                  className="p-2 bg-red-500 text-white rounded-lg"
+                  onClick={() => handleDeleteTask(index)}
+                >
+                  Delete
+                </button>
               </div>
-
-      
-            
+            </div>
           ))}
         </div>
       </div>
     </main>
   );
 }
-
